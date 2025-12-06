@@ -1,0 +1,1366 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Study RPG - Arcane Academy</title>
+
+<!-- Fantasy Font -->
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap" rel="stylesheet">
+<!-- Icon Library -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+<style>
+    :root {
+        --bg-main: #050309;
+        --bg-panel: #130716;
+        --bg-panel-soft: #1a0c23;
+        --accent: #f5c14d;
+        --accent-soft: #e39a47;
+        --accent-strong: #ffdf6b;
+        --text-main: #f8f4ff;
+        --text-muted: #c9bdea;
+        --danger: #ff6b6b;
+        --success: #4caf50;
+        --obsidian: #08040d;
+        --obsidian-purple: #4b1f60;
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        margin: 0;
+        padding: 0;
+        font-family: "Cinzel", serif;
+        background: radial-gradient(circle at top, #34163f 0, #050309 55%, #020005 100%);
+        color: var(--text-main);
+        min-height: 100vh;
+        overflow-x: hidden;
+    }
+
+    /* Magical particle-ish background dots */
+    body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        background-image:
+            radial-gradient(circle at 10% 20%, rgba(255,255,255,0.12) 0, transparent 25%),
+            radial-gradient(circle at 80% 10%, rgba(180,130,255,0.18) 0, transparent 22%),
+            radial-gradient(circle at 60% 80%, rgba(255,255,255,0.08) 0, transparent 20%);
+        opacity: 0.7;
+        mix-blend-mode: screen;
+        z-index: -1;
+    }
+
+    #app {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    h1, h2, h3, h4 {
+        text-shadow: 0 0 8px rgba(0,0,0,0.7);
+    }
+
+    h1 {
+        text-align: center;
+        margin-bottom: 10px;
+        font-size: 32px;
+        color: var(--accent-strong);
+    }
+
+    .subtitle {
+        text-align: center;
+        margin-bottom: 30px;
+        color: var(--text-muted);
+        font-size: 14px;
+    }
+
+    .panel {
+        background: linear-gradient(145deg, rgba(255,255,255,0.03), rgba(0,0,0,0.4));
+        border-radius: 16px;
+        border: 1px solid rgba(245,193,77,0.35);
+        padding: 20px;
+        box-shadow:
+            0 0 18px rgba(0,0,0,0.8),
+            0 0 25px rgba(245,193,77,0.08);
+        margin-bottom: 24px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .panel::before {
+        content: "";
+        position: absolute;
+        inset: -40%;
+        background: radial-gradient(circle at top, rgba(245,193,77,0.08), transparent 60%);
+        opacity: 0;
+        transition: opacity 0.6s;
+        pointer-events: none;
+    }
+
+    .panel:hover::before {
+        opacity: 1;
+    }
+
+    .panel-title {
+        font-size: 18px;
+        margin-bottom: 10px;
+        color: var(--accent-strong);
+    }
+
+    .row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+
+    .col {
+        flex: 1;
+        min-width: 260px;
+    }
+
+    /* LOGIN SCREEN */
+
+    #screen-login {
+        display: none;
+    }
+
+    #screen-game {
+        display: none;
+    }
+
+    .login-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        align-items: stretch;
+    }
+
+    .login-left, .login-right {
+        flex: 1;
+        min-width: 260px;
+    }
+
+    label {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 14px;
+        color: var(--text-muted);
+    }
+
+    input[type="text"] {
+        width: 100%;
+        padding: 8px 10px;
+        border-radius: 8px;
+        border: 1px solid rgba(255,255,255,0.2);
+        background: rgba(0,0,0,0.55);
+        color: var(--text-main);
+        font-family: inherit;
+    }
+
+    select {
+        width: 100%;
+        padding: 8px 10px;
+        border-radius: 8px;
+        border: 1px solid rgba(255,255,255,0.2);
+        background: rgba(0,0,0,0.55);
+        color: var(--text-main);
+        font-family: inherit;
+    }
+
+    .class-card {
+        background: rgba(0,0,0,0.5);
+        border-radius: 10px;
+        padding: 10px;
+        margin-bottom: 10px;
+        border: 1px solid transparent;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s, background 0.15s;
+    }
+
+    .class-card i {
+        font-size: 24px;
+        color: var(--accent);
+    }
+
+    .class-card.selected {
+        border-color: var(--accent-soft);
+        box-shadow: 0 0 16px rgba(245,193,77,0.4);
+        background: radial-gradient(circle at top left, rgba(245,193,77,0.25), rgba(0,0,0,0.85));
+        transform: translateY(-2px);
+    }
+
+    .class-name {
+        font-weight: 700;
+        font-size: 15px;
+        color: var(--accent-strong);
+    }
+
+    .class-desc {
+        font-size: 12px;
+        color: var(--text-muted);
+    }
+
+    .btn {
+        border-radius: 999px;
+        padding: 10px 18px;
+        border: none;
+        cursor: pointer;
+        background: linear-gradient(135deg, var(--accent), var(--accent-soft));
+        color: #22100a;
+        font-weight: 700;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+        font-size: 13px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.4), 0 0 12px rgba(245,193,77,0.5);
+        transition: transform 0.1s, box-shadow 0.1s, filter 0.1s;
+    }
+
+    .btn i {
+        font-size: 14px;
+    }
+
+    .btn:hover {
+        transform: translateY(-2px) scale(1.02);
+        filter: brightness(1.08);
+        box-shadow: 0 6px 18px rgba(0,0,0,0.8), 0 0 18px rgba(245,193,77,0.7);
+    }
+
+    .btn:active {
+        transform: translateY(0) scale(0.98);
+        box-shadow: 0 2px 6px rgba(0,0,0,0.7);
+    }
+
+    .btn-ghost {
+        background: transparent;
+        border: 1px solid rgba(245,193,77,0.4);
+        color: var(--accent-strong);
+        box-shadow: none;
+    }
+
+    .btn-ghost:hover {
+        background: rgba(245,193,77,0.12);
+    }
+
+    .tagline {
+        font-size: 13px;
+        margin-top: 6px;
+        color: var(--text-muted);
+    }
+
+    /* GAME SCREEN */
+
+    .subject-box {
+        background: var(--bg-panel);
+        border-radius: 14px;
+        padding: 14px;
+        margin-bottom: 18px;
+        border: 1px solid rgba(245,193,77,0.3);
+        box-shadow: 0 0 16px rgba(0,0,0,0.8);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .subject-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 8px;
+        gap: 8px;
+    }
+
+    .subject-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 16px;
+        color: var(--accent-strong);
+    }
+
+    .subject-title i {
+        font-size: 22px;
+    }
+
+    .subject-meta {
+        font-size: 12px;
+        color: var(--text-muted);
+        text-align: right;
+    }
+
+    .xp-bar {
+        background: #2d203e;
+        width: 100%;
+        height: 18px;
+        border-radius: 999px;
+        overflow: hidden;
+        margin-bottom: 6px;
+        border: 1px solid rgba(245,193,77,0.3);
+        box-shadow: inset 0 0 6px rgba(0,0,0,0.8);
+    }
+
+    .xp-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #4caf50, #9cff8a);
+        width: 0%;
+        transition: width 0.35s ease-out;
+        box-shadow: 0 0 10px rgba(156,255,138,0.9);
+    }
+
+    .xp-text {
+        font-size: 12px;
+        color: var(--text-muted);
+        margin-bottom: 8px;
+    }
+
+    .subject-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    .btn-small {
+        padding: 6px 10px;
+        font-size: 11px;
+        border-radius: 999px;
+    }
+
+    .btn-task {
+        background: linear-gradient(135deg, #6cc4ff, #a5e3ff);
+        color: #03101a;
+        box-shadow: 0 0 8px rgba(111,196,255,0.7);
+    }
+
+    .btn-shop {
+        background: linear-gradient(135deg, #ff8ba7, #ffd1dc);
+        color: #2b0510;
+        box-shadow: 0 0 8px rgba(255,139,167,0.7);
+    }
+
+    .btn-task i, .btn-shop i {
+        font-size: 12px;
+    }
+
+    .section-label {
+        font-size: 13px;
+        margin-top: 3px;
+        margin-bottom: 4px;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+    }
+
+    /* XP Slider */
+    .slider-box {
+        background: var(--bg-panel-soft);
+        border-radius: 14px;
+        padding: 14px;
+        border: 1px solid rgba(245,193,77,0.25);
+    }
+
+    input[type="range"] {
+        width: 100%;
+    }
+
+    .slider-row {
+        display: flex;
+        justify-content: space-between;
+        font-size: 12px;
+        color: var(--text-muted);
+        margin-top: 4px;
+    }
+
+    .top-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+        font-size: 14px;
+        color: var(--text-muted);
+    }
+
+    .player-name {
+        color: var(--accent-strong);
+        font-size: 16px;
+    }
+
+    .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(245,193,77,0.12);
+        border-radius: 999px;
+        padding: 4px 10px;
+        border: 1px solid rgba(245,193,77,0.4);
+        font-size: 11px;
+    }
+
+    .badge i {
+        color: var(--accent);
+        font-size: 12px;
+    }
+
+    /* Toast / notifications */
+    #toast {
+        position: fixed;
+        left: 50%;
+        top: 16px;
+        transform: translateX(-50%);
+        background: rgba(9, 4, 20, 0.96);
+        border-radius: 999px;
+        padding: 8px 18px;
+        border: 1px solid rgba(245,193,77,0.6);
+        box-shadow: 0 8px 16px rgba(0,0,0,0.8);
+        display: none;
+        z-index: 1000;
+        font-size: 13px;
+        color: var(--accent-strong);
+    }
+
+    #toast i {
+        margin-right: 6px;
+        color: var(--accent);
+    }
+
+    /* Level-up animation */
+    .level-up-glow {
+        animation: levelUpGlow 1s ease-out;
+    }
+
+    @keyframes levelUpGlow {
+        0% {
+            box-shadow: 0 0 0 rgba(255,255,255,0), 0 0 0 rgba(245,193,77,0);
+            transform: scale(1);
+        }
+        50% {
+            box-shadow: 0 0 16px rgba(255,255,255,0.6), 0 0 32px rgba(245,193,77,0.9);
+            transform: scale(1.02);
+        }
+        100% {
+            box-shadow: 0 0 16px rgba(0,0,0,0.8);
+            transform: scale(1);
+        }
+    }
+
+    /* OBSIDIAN STUDY MODAL */
+
+    .modal-backdrop {
+        position: fixed;
+        inset: 0;
+        background: radial-gradient(circle at top, rgba(80,20,100,0.6) 0, rgba(2,0,5,0.98) 55%, rgba(0,0,0,1) 100%);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 900;
+    }
+
+    .modal-backdrop.active {
+        display: flex;
+    }
+
+    .modal-content {
+        width: min(420px, 92vw);
+        padding: 22px 20px 18px;
+        border-radius: 20px;
+        background: radial-gradient(circle at top, #2a1038 0, #050005 75%);
+        border: 1px solid rgba(190,120,255,0.8);
+        box-shadow:
+            0 0 28px rgba(0,0,0,1),
+            0 0 40px rgba(150,70,255,0.9);
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .modal-content::before {
+        content: "";
+        position: absolute;
+        inset: -40%;
+        background:
+            radial-gradient(circle at 10% 10%, rgba(255,255,255,0.1) 0, transparent 60%),
+            radial-gradient(circle at 80% 80%, rgba(190,120,255,0.25) 0, transparent 60%);
+        opacity: 0.6;
+        mix-blend-mode: screen;
+        pointer-events: none;
+    }
+
+    .modal-header {
+        font-size: 18px;
+        margin-bottom: 4px;
+        color: #f0d8ff;
+    }
+
+    .modal-sub {
+        font-size: 12px;
+        color: var(--text-muted);
+        margin-bottom: 10px;
+    }
+
+    .modal-close {
+        position: absolute;
+        right: 10px;
+        top: 8px;
+        background: transparent;
+        border: none;
+        color: #e4d1ff;
+        cursor: pointer;
+        font-size: 16px;
+        opacity: 0.7;
+    }
+
+    .modal-close:hover {
+        opacity: 1;
+    }
+
+    /* Obsidian rune circle */
+
+    .rune-wrapper {
+        display: flex;
+        justify-content: center;
+        margin-top: 6px;
+        margin-bottom: 6px;
+    }
+
+    .rune-circle {
+        position: relative;
+        width: 160px;
+        height: 160px;
+        border-radius: 50%;
+        background: radial-gradient(circle, #120413 0, #020005 70%);
+        box-shadow:
+            0 0 20px rgba(0,0,0,1),
+            0 0 28px rgba(120,40,160,0.9);
+        overflow: hidden;
+    }
+
+    .rune-circle::after {
+        content: "";
+        position: absolute;
+        inset: -30%;
+        background:
+            radial-gradient(circle at 30% 10%, rgba(120,40,160,0.2) 0, transparent 55%),
+            radial-gradient(circle at 70% 90%, rgba(0,0,0,0.8) 0, transparent 70%);
+        opacity: 0.8;
+        mix-blend-mode: screen;
+        pointer-events: none;
+    }
+
+    .rune-ring {
+        position: absolute;
+        inset: 11px;
+        border-radius: 50%;
+        border: 1px dashed rgba(150,90,240,0.7);
+        animation: runeRotate 16s linear infinite;
+        box-shadow: 0 0 16px rgba(120,50,200,0.7);
+    }
+
+    .rune-inner {
+        inset: 25px;
+        border-style: solid;
+        border-width: 1px;
+        border-color: rgba(90,40,160,0.65);
+        opacity: 0.6;
+        animation-duration: 24s;
+        animation-direction: reverse;
+    }
+
+    @keyframes runeRotate {
+        from { transform: rotate(0deg); }
+        to   { transform: rotate(360deg); }
+    }
+
+    .rune-core {
+        position: absolute;
+        inset: 38px;
+        border-radius: 50%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        color: #f0e3ff;
+        text-shadow: 0 0 14px rgba(230,210,255,1);
+        background: radial-gradient(circle, rgba(40,0,70,0.9) 0, rgba(0,0,0,0.9) 85%);
+        box-shadow: 0 0 16px rgba(0,0,0,1);
+    }
+
+    .rune-core i {
+        font-size: 26px;
+        margin-bottom: 4px;
+        color: #e3d0ff;
+    }
+
+    #studyTimeLabel {
+        font-size: 13px;
+        margin-top: 2px;
+    }
+
+    #studyTierLabel {
+        font-size: 11px;
+        margin-top: 3px;
+        color: #f0cfff;
+    }
+
+    .rune-circle.rune-tier1 .rune-ring {
+        border-color: rgba(120,80,200,0.6);
+        box-shadow: 0 0 14px rgba(120,60,200,0.7);
+    }
+
+    .rune-circle.rune-tier2 .rune-ring {
+        border-color: rgba(160,110,255,0.8);
+        box-shadow: 0 0 18px rgba(160,110,255,0.8);
+    }
+
+    .rune-circle.rune-tier3 .rune-ring {
+        border-color: rgba(210,120,255,0.9);
+        box-shadow: 0 0 24px rgba(210,120,255,0.9);
+    }
+
+    .rune-circle.rune-tier4 .rune-ring {
+        border-color: rgba(255,255,255,0.98);
+        box-shadow:
+            0 0 30px rgba(255,255,255,0.95),
+            0 0 40px rgba(220,150,255,1);
+    }
+
+    .modal-footer {
+        margin-top: 10px;
+        font-size: 11px;
+        color: var(--text-muted);
+    }
+
+    @media (max-width: 768px) {
+        #app {
+            padding: 14px;
+        }
+        .subject-actions {
+            gap: 4px;
+        }
+        .btn-small {
+            padding: 5px 8px;
+            font-size: 10px;
+        }
+    }
+</style>
+</head>
+<body>
+<div id="app">
+
+    <h1>Arcane Academy 📜</h1>
+    <div class="subtitle">Turn your physics, maths & further maths into an RPG adventure.</div>
+
+    <!-- LOGIN SCREEN -->
+    <div id="screen-login" class="panel">
+        <div class="panel-title">Enter the Academy</div>
+        <div class="login-grid">
+            <div class="login-left">
+                <label for="playerName">Adventurer Name</label>
+                <input id="playerName" type="text" placeholder="e.g. ArcaneScholar">
+                <div class="tagline">This name will appear on your study save file.</div>
+
+                <label style="margin-top:16px;">Choose Your Path</label>
+                <div id="classCards">
+                    <div class="class-card" data-class="Physicist">
+                        <i class="fa-solid fa-atom"></i>
+                        <div>
+                            <div class="class-name">Force Disciple (Physicist)</div>
+                            <div class="class-desc">Master of the Force Arena. Bends physics problems to their will.</div>
+                        </div>
+                    </div>
+                    <div class="class-card" data-class="Archivist">
+                        <i class="fa-solid fa-book-skull"></i>
+                        <div>
+                            <div class="class-name">Evil Archivist</div>
+                            <div class="class-desc">Keeper of the Evil Archives. Further Maths spells and cursed integrals.</div>
+                        </div>
+                    </div>
+                    <div class="class-card" data-class="Mage">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                        <div>
+                            <div class="class-name">Pure Mage</div>
+                            <div class="class-desc">Resident of the Pure Magic Tower. Normal maths turned into runes.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="login-right">
+                <p style="font-size:13px; color:var(--text-muted);">
+                    In this academy, every practice question, revision session, and test
+                    becomes an action that grants XP. Spend XP in the shop to buy breaks,
+                    episodes, walks, and real-life rewards.
+                </p>
+                <p style="font-size:13px; color:var(--text-muted);">
+                    Use the <strong>Obsidian Study Ritual</strong> to track real focus time and
+                    convert minutes into bonus XP with dark multipliers.
+                </p>
+                <button id="btnStartGame" class="btn">
+                    <i class="fa-solid fa-play"></i> Begin Adventure
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- GAME SCREEN -->
+    <div id="screen-game">
+        <div class="top-bar">
+            <div>
+                <span class="player-name" id="playerNameLabel"></span>
+                <span id="playerClassLabel" style="font-size:13px; color:var(--text-muted); margin-left:8px;"></span>
+            </div>
+            <div class="badge">
+                <i class="fa-solid fa-circle-nodes"></i>
+                <span>Study Ritual: bonus XP = minutes × multiplier</span>
+            </div>
+        </div>
+
+        <div class="row panel">
+            <div class="col">
+                <div class="panel-title">Subjects & XP</div>
+                <div id="subjectsContainer"></div>
+            </div>
+            <div class="col">
+                <!-- Small panel to open ritual modal -->
+                <div class="panel" style="margin-bottom:16px;">
+                    <div class="panel-title">Obsidian Study Ritual</div>
+                    <p style="font-size:12px; color:var(--text-muted); margin-top:0;">
+                        Start a ritual when you begin a focus block. When you end it,
+                        your elapsed time is turned into bonus XP for one subject.
+                    </p>
+                    <button id="btnOpenRitual" class="btn btn-ghost" style="margin-top:4px;">
+                        <i class="fa-solid fa-skull-crossbones"></i> Begin Study Ritual
+                    </button>
+                </div>
+
+                <!-- Slider Panel -->
+                <div class="panel-title">XP Slider & Custom Gain</div>
+                <div class="slider-box">
+                    <label for="subjectSelect">Active Subject</label>
+                    <select id="subjectSelect">
+                        <option>Force Arena</option>
+                        <option>Evil Archives</option>
+                        <option>Pure Magic Tower</option>
+                    </select>
+
+                    <label for="xpSlider" style="margin-top:10px;">Custom XP to Add</label>
+                    <input type="range" id="xpSlider" min="0" max="500" value="0">
+                    <div class="slider-row">
+                        <span>0</span>
+                        <span><span id="sliderValue">0</span> XP</span>
+                        <span>500</span>
+                    </div>
+                    <button id="btnApplySlider" class="btn btn-ghost" style="margin-top:10px; width:100%;">
+                        <i class="fa-solid fa-plus"></i> Add slider XP to active subject (no multiplier)
+                    </button>
+
+                    <div style="margin-top:10px; font-size:12px; color:var(--text-muted);">
+                        Use this if you calculated XP manually on your whiteboard and want to sync it.
+                    </div>
+                </div>
+
+                <div class="panel" style="margin-top:18px;">
+                    <div class="panel-title">Session Tips</div>
+                    <p style="font-size:12px; color:var(--text-muted); margin-top:0;">
+                        1. Start the Obsidian Study Ritual at the beginning of a real focus block.<br>
+                        2. When you end it, your minutes become bonus XP for a chosen subject.<br>
+                        3. Use the task buttons to log specific actions (practice, revise, tests).<br>
+                        4. Use the shop only when you actually take the real-life reward.
+                    </p>
+                    <button id="btnReset" class="btn-ghost btn" style="margin-top:6px;">
+                        <i class="fa-solid fa-trash"></i> Reset all XP & mastery
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- OBSIDIAN STUDY MODAL -->
+    <div id="studyModal" class="modal-backdrop">
+        <div class="modal-content">
+            <button class="modal-close" id="btnCloseRitualSoft" title="Close ritual window (timer keeps running)">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div class="modal-header">Obsidian Study Ritual</div>
+            <div class="modal-sub">
+                Focus completely until you are done.  
+                Then end the ritual to convert time into bonus XP.
+            </div>
+
+            <label for="studySubjectSelect" style="font-size:12px; margin-bottom:4px; color:var(--text-muted);">
+                Subject to receive bonus XP
+            </label>
+            <select id="studySubjectSelect" style="margin-bottom:6px;">
+                <option>Force Arena</option>
+                <option>Evil Archives</option>
+                <option>Pure Magic Tower</option>
+            </select>
+
+            <div class="rune-wrapper">
+                <div class="rune-circle rune-tier1" id="runeCircle">
+                    <div class="rune-ring rune-outer"></div>
+                    <div class="rune-ring rune-inner"></div>
+                    <div class="rune-core">
+                        <i class="fa-solid fa-hourglass-half"></i>
+                        <div id="studyTimeLabel">00:00:00</div>
+                        <div id="studyTierLabel">Multiplier: x1.00</div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap; justify-content:center;">
+                <button id="btnStartStudy" class="btn btn-ghost">
+                    <i class="fa-solid fa-play"></i> Start ritual
+                </button>
+                <button id="btnStopStudy" class="btn btn-ghost">
+                    <i class="fa-solid fa-stop"></i> End ritual & claim XP
+                </button>
+            </div>
+
+            <div class="modal-footer">
+                Bonus: <strong>total_minutes × multiplier</strong> XP  
+                30m ⇒ x1.25, 60m ⇒ x1.5, 120m+ ⇒ x1.75
+            </div>
+        </div>
+    </div>
+
+    <div id="toast"><i class="fa-solid fa-star"></i><span id="toastText"></span></div>
+</div>
+
+<script>
+/* ---------------------------------
+   DATA + SAVE
+------------------------------------ */
+
+let subjects = JSON.parse(localStorage.getItem("studySubjects")) || {
+    "Force Arena": { xp: 0, total: 0, mastery: 0 },
+    "Evil Archives": { xp: 0, total: 0, mastery: 0 },
+    "Pure Magic Tower": { xp: 0, total: 0, mastery: 0 }
+};
+
+let player = JSON.parse(localStorage.getItem("studyPlayer")) || {
+    name: "",
+    className: "",
+};
+
+const mastery_levels = [
+    { threshold: 300, reward: 200 },
+    { threshold: 900, reward: 500 },
+    { threshold: 1500, reward: 800 },
+    { threshold: 2500, reward: 1100 },
+    { threshold: 3000, reward: 1400 },
+    { threshold: 4000, reward: 1700 },
+    { threshold: 5000, reward: 2000 },
+    { threshold: 6500, reward: 3000 }
+];
+
+const tasks = [
+    { id: "practice", name: "Practice Question", xp: 10, icon: "fa-pencil" },
+    { id: "revise", name: "Revise Topic", xp: 20, icon: "fa-book-open" },
+    { id: "chapter", name: "Learn Chapter", xp: 50, icon: "fa-scroll" },
+    { id: "test80", name: "Test 80%+", xp: 100, icon: "fa-dice-five" },
+    { id: "test90", name: "Test 90%+", xp: 200, icon: "fa-dice-six" },
+    { id: "test100", name: "Test 100%", xp: 500, icon: "fa-trophy" }
+];
+
+const shopItems = [
+    { name: "10 min break", cost: 50, icon: "fa-mug-hot" },
+    { name: "1 episode", cost: 100, icon: "fa-tv" },
+    { name: "2 episodes", cost: 150, icon: "fa-tv" },
+    { name: "60 min break", cost: 200, icon: "fa-bed" },
+    { name: "Long walk", cost: 500, icon: "fa-person-walking" },
+    { name: "Call girlfriend", cost: 750, icon: "fa-phone" },
+    { name: "€50 treat", cost: 1000, icon: "fa-gem" }
+];
+
+const multipliers = [
+    { time: 120, mult: 1.75 },
+    { time: 60, mult: 1.5 },
+    { time: 30, mult: 1.25 }
+];
+
+// Study timer state
+let studyTimer = {
+    active: false,
+    startTime: null,
+    intervalId: null
+};
+
+/* ---------------------------------
+   SOUNDS
+------------------------------------ */
+// Public free sound URLs. If any fail, the game still works.
+const sndClick = new Audio("https://cdn.pixabay.com/download/audio/2022/03/15/audio_5b917853f3.mp3?filename=click-124467.mp3");
+const sndXP = new Audio("https://cdn.pixabay.com/download/audio/2022/03/15/audio_1fa9a316d3.mp3?filename=correct-2-46134.mp3");
+const sndLevel = new Audio("https://cdn.pixabay.com/download/audio/2022/03/15/audio_2b075a3248.mp3?filename=success-fanfare-trumpets-6185.mp3");
+const sndBuy = new Audio("https://cdn.pixabay.com/download/audio/2022/03/15/audio_9db4079ad2.mp3?filename=collect-points-190037.mp3");
+
+function playSound(sound) {
+    try {
+        sound.currentTime = 0;
+        sound.play();
+    } catch (e) {
+        // ignore if browser blocks autoplay initially
+    }
+}
+
+/* ---------------------------------
+   SAVE / LOAD
+------------------------------------ */
+
+function saveAll() {
+    localStorage.setItem("studySubjects", JSON.stringify(subjects));
+    localStorage.setItem("studyPlayer", JSON.stringify(player));
+}
+
+/* ---------------------------------
+   MULTIPLIER (used by study timer)
+------------------------------------ */
+
+function getMultiplier(minutes = 0) {
+    for (let m of multipliers) {
+        if (minutes >= m.time) return m.mult;
+    }
+    return 1;
+}
+
+/* ---------------------------------
+   XP / MASTERY LOGIC
+------------------------------------ */
+
+function gainXP(subjectName, amount) {
+    subjects[subjectName].xp += amount;
+    subjects[subjectName].total += amount;
+
+    playSound(sndXP);
+    const leveledUp = checkMastery(subjectName);
+
+    saveAll();
+    renderSubjects();
+
+    showToast(`+${amount} XP to ${subjectName}`);
+    if (!leveledUp) {
+        playSound(sndClick);
+    }
+}
+
+function checkMastery(subjectName) {
+    const data = subjects[subjectName];
+    let leveledUp = false;
+
+    while (data.mastery < mastery_levels.length) {
+        const next = mastery_levels[data.mastery];
+        if (data.total >= next.threshold) {
+            data.mastery++;
+            data.xp += next.reward;
+            leveledUp = true;
+            showToast(`⭐ ${subjectName} reached Mastery ${data.mastery}! Bonus +${next.reward} XP`);
+            playSound(sndLevel);
+            triggerLevelAnimation(subjectName);
+        } else {
+            break;
+        }
+    }
+    return leveledUp;
+}
+
+/* ---------------------------------
+   SHOP
+------------------------------------ */
+
+function buyItem(subjectName, cost, itemName) {
+    const s = subjects[subjectName];
+    if (s.xp < cost) {
+        showToast(`Not enough XP for ${itemName}!`);
+        playSound(sndClick);
+        return;
+    }
+    s.xp -= cost;
+    saveAll();
+    renderSubjects();
+    showToast(`Purchased: ${itemName} (-${cost} XP from ${subjectName})`);
+    playSound(sndBuy);
+}
+
+/* ---------------------------------
+   TOAST / NOTIFICATION
+------------------------------------ */
+
+let toastTimeout = null;
+
+function showToast(message) {
+    const toast = document.getElementById("toast");
+    const text = document.getElementById("toastText");
+    text.textContent = message;
+    toast.style.display = "inline-block";
+    toast.style.opacity = "1";
+
+    if (toastTimeout) clearTimeout(toastTimeout);
+    toastTimeout = setTimeout(() => {
+        toast.style.opacity = "0";
+        setTimeout(() => {
+            toast.style.display = "none";
+        }, 300);
+    }, 2000);
+}
+
+/* ---------------------------------
+   LEVEL-UP ANIMATION
+------------------------------------ */
+
+function triggerLevelAnimation(subjectName) {
+    const el = document.querySelector(`[data-subject-id="${subjectName}"]`);
+    if (!el) return;
+    el.classList.remove("level-up-glow");
+    void el.offsetWidth;
+    el.classList.add("level-up-glow");
+}
+
+/* ---------------------------------
+   RUNE / STUDY TIMER UI
+------------------------------------ */
+
+function updateStudyUI(totalSeconds, mult) {
+    const rune = document.getElementById("runeCircle");
+    const timeLabel = document.getElementById("studyTimeLabel");
+    const tierLabel = document.getElementById("studyTierLabel");
+
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+
+    const timeStr = `${String(hours).padStart(2,"0")}:${String(minutes).padStart(2,"0")}:${String(seconds).padStart(2,"0")}`;
+    timeLabel.textContent = timeStr;
+    tierLabel.textContent = `Multiplier: x${mult.toFixed(2)}`;
+
+    rune.classList.remove("rune-tier1", "rune-tier2", "rune-tier3", "rune-tier4");
+    let cls = "rune-tier1";
+    if (mult >= 1.75) cls = "rune-tier4";
+    else if (mult >= 1.5) cls = "rune-tier3";
+    else if (mult >= 1.25) cls = "rune-tier2";
+    rune.classList.add(cls);
+}
+
+function updateStudyTimerTick() {
+    if (!studyTimer.active || !studyTimer.startTime) return;
+    const now = Date.now();
+    const elapsedMs = now - studyTimer.startTime;
+    const totalSeconds = Math.max(0, Math.floor(elapsedMs / 1000));
+    const minutes = totalSeconds / 60;
+    const mult = getMultiplier(minutes);
+    updateStudyUI(totalSeconds, mult);
+}
+
+/* ---------------------------------
+   START / STOP STUDY SESSION
+------------------------------------ */
+
+function startStudySession() {
+    if (studyTimer.active) {
+        showToast("Study session already running.");
+        playSound(sndClick);
+        return;
+    }
+    studyTimer.active = true;
+    studyTimer.startTime = Date.now();
+    if (studyTimer.intervalId) clearInterval(studyTimer.intervalId);
+    studyTimer.intervalId = setInterval(updateStudyTimerTick, 1000);
+    updateStudyTimerTick();
+    showToast("Ritual begun. All focus, no distractions.");
+    playSound(sndClick);
+}
+
+function stopStudySession() {
+    if (!studyTimer.active || !studyTimer.startTime) {
+        showToast("No active ritual to end.");
+        playSound(sndClick);
+        return;
+    }
+
+    const now = Date.now();
+    const elapsedMs = now - studyTimer.startTime;
+    const totalSeconds = Math.max(1, Math.floor(elapsedMs / 1000)); // at least 1 second
+    let minutes = totalSeconds / 60;
+    if (minutes < 1) minutes = 1; // minimum 1 minute for small bursts
+
+    const mult = getMultiplier(minutes);
+    const bonusXP = Math.round(minutes * mult);
+
+    const select = document.getElementById("studySubjectSelect");
+    const subjectName = select.value;
+
+    gainXP(subjectName, bonusXP);
+    showToast(`Ritual complete: ${Math.floor(minutes)} min × ${mult.toFixed(2)} = +${bonusXP} XP to ${subjectName}`);
+    playSound(sndLevel);
+
+    if (studyTimer.intervalId) clearInterval(studyTimer.intervalId);
+    studyTimer.active = false;
+    studyTimer.startTime = null;
+    studyTimer.intervalId = null;
+    updateStudyUI(0, 1);
+    closeStudyModal();
+}
+
+/* ---------------------------------
+   MODAL CONTROLS
+------------------------------------ */
+
+function openStudyModal() {
+    document.getElementById("studyModal").classList.add("active");
+}
+
+function closeStudyModal() {
+    document.getElementById("studyModal").classList.remove("active");
+}
+
+/* ---------------------------------
+   RENDER SUBJECTS
+------------------------------------ */
+
+function renderSubjects() {
+    const container = document.getElementById("subjectsContainer");
+    container.innerHTML = "";
+
+    const iconMap = {
+        "Force Arena": "fa-atom",
+        "Evil Archives": "fa-book-skull",
+        "Pure Magic Tower": "fa-hat-wizard"
+    };
+
+    for (let name in subjects) {
+        const s = subjects[name];
+        const max = s.mastery < mastery_levels.length
+            ? mastery_levels[s.mastery].threshold
+            : Math.max(s.total, 1);
+        const percent = Math.min(100, (s.total / max) * 100);
+
+        const box = document.createElement("div");
+        box.className = "subject-box";
+        box.dataset.subjectId = name;
+
+        box.innerHTML = `
+            <div class="subject-header">
+                <div class="subject-title">
+                    <i class="fa-solid ${iconMap[name] || "fa-star"}"></i>
+                    <span>${name}</span>
+                </div>
+                <div class="subject-meta">
+                    <div>Mastery: <strong>${s.mastery}</strong></div>
+                    <div>Available XP: ${s.xp}</div>
+                </div>
+            </div>
+            <div class="xp-bar">
+                <div class="xp-fill" style="width:${percent}%;"></div>
+            </div>
+            <div class="xp-text">
+                Total XP in this subject: <strong>${s.total}</strong> / ${max}
+            </div>
+            <div class="section-label">Actions</div>
+            <div class="subject-actions">
+                ${tasks.map(t =>
+                    `<button class="btn btn-small btn-task" data-task="${t.id}">
+                        <i class="fa-solid ${t.icon}"></i> ${t.name} (+${t.xp})
+                    </button>`
+                ).join("")}
+            </div>
+            <div class="section-label" style="margin-top:8px;">XP Shop</div>
+            <div class="subject-actions">
+                ${shopItems.map(item =>
+                    `<button class="btn btn-small btn-shop" data-shop="${item.name}">
+                        <i class="fa-solid ${item.icon}"></i> ${item.name} (${item.cost} XP)
+                    </button>`
+                ).join("")}
+            </div>
+        `;
+
+        container.appendChild(box);
+
+        const taskButtons = box.querySelectorAll("[data-task]");
+        taskButtons.forEach(btn => {
+            btn.addEventListener("click", () => {
+                const id = btn.getAttribute("data-task");
+                const t = tasks.find(x => x.id === id);
+                if (t) {
+                    gainXP(name, t.xp); // tasks are flat XP, ritual gives separate bonus
+                }
+            });
+        });
+
+        const shopButtons = box.querySelectorAll("[data-shop]");
+        shopButtons.forEach(btn => {
+            btn.addEventListener("click", () => {
+                const itemName = btn.getAttribute("data-shop");
+                const item = shopItems.find(x => x.name === itemName);
+                if (item) {
+                    buyItem(name, item.cost, item.name);
+                }
+            });
+        });
+    }
+}
+
+/* ---------------------------------
+   LOGIN / START
+------------------------------------ */
+
+function showLogin() {
+    document.getElementById("screen-login").style.display = "block";
+    document.getElementById("screen-game").style.display = "none";
+}
+
+function showGame() {
+    document.getElementById("screen-login").style.display = "none";
+    document.getElementById("screen-game").style.display = "block";
+    document.getElementById("playerNameLabel").textContent = player.name || "Unknown Adventurer";
+    document.getElementById("playerClassLabel").textContent = player.className ? `(${player.className})` : "";
+    renderSubjects();
+    updateStudyUI(0, 1);
+}
+
+/* ---------------------------------
+   CLASS SELECTION UI
+------------------------------------ */
+
+function setupClassCards() {
+    const cards = document.querySelectorAll(".class-card");
+    cards.forEach(card => {
+        card.addEventListener("click", () => {
+            cards.forEach(c => c.classList.remove("selected"));
+            card.classList.add("selected");
+            player.className = card.dataset.class || "";
+            playSound(sndClick);
+        });
+    });
+}
+
+/* ---------------------------------
+   SLIDER SETUP
+------------------------------------ */
+
+function setupSlider() {
+    const slider = document.getElementById("xpSlider");
+    const sliderValue = document.getElementById("sliderValue");
+    const btnApply = document.getElementById("btnApplySlider");
+    const subjectSelect = document.getElementById("subjectSelect");
+
+    slider.addEventListener("input", () => {
+        sliderValue.textContent = slider.value;
+    });
+
+    btnApply.addEventListener("click", () => {
+        const val = parseInt(slider.value, 10) || 0;
+        if (val <= 0) {
+            showToast("Move the slider above 0 XP to add custom XP.");
+            playSound(sndClick);
+            return;
+        }
+        const subject = subjectSelect.value;
+        gainXP(subject, val); // no multiplier
+    });
+}
+
+/* ---------------------------------
+   STUDY TIMER SETUP
+------------------------------------ */
+
+function setupStudyTimer() {
+    const btnStart = document.getElementById("btnStartStudy");
+    const btnStop = document.getElementById("btnStopStudy");
+    const btnOpenRitual = document.getElementById("btnOpenRitual");
+    const btnCloseSoft = document.getElementById("btnCloseRitualSoft");
+
+    btnStart.addEventListener("click", () => {
+        startStudySession();
+    });
+
+    btnStop.addEventListener("click", () => {
+        stopStudySession();
+    });
+
+    btnOpenRitual.addEventListener("click", () => {
+        openStudyModal();
+        playSound(sndClick);
+    });
+
+    btnCloseSoft.addEventListener("click", () => {
+        closeStudyModal();
+        playSound(sndClick);
+    });
+
+    updateStudyUI(0, 1);
+}
+
+/* ---------------------------------
+   RESET BUTTON
+------------------------------------ */
+
+function setupReset() {
+    const btn = document.getElementById("btnReset");
+    btn.addEventListener("click", () => {
+        if (!confirm("Are you sure you want to reset ALL XP, mastery and profile?")) return;
+
+        subjects = {
+            "Force Arena": { xp: 0, total: 0, mastery: 0 },
+            "Evil Archives": { xp: 0, total: 0, mastery: 0 },
+            "Pure Magic Tower": { xp: 0, total: 0, mastery: 0 }
+        };
+        player = { name: "", className: "" };
+        saveAll();
+
+        if (studyTimer.intervalId) clearInterval(studyTimer.intervalId);
+        studyTimer = { active: false, startTime: null, intervalId: null };
+        updateStudyUI(0, 1);
+
+        closeStudyModal();
+        showLogin();
+        showToast("All progress reset. The academy awaits a new hero.");
+    });
+}
+
+/* ---------------------------------
+   STARTUP
+------------------------------------ */
+
+document.addEventListener("DOMContentLoaded", () => {
+    setupClassCards();
+    setupSlider();
+    setupStudyTimer();
+    setupReset();
+
+    const btnStart = document.getElementById("btnStartGame");
+    btnStart.addEventListener("click", () => {
+        const nameInput = document.getElementById("playerName");
+        const chosenName = (nameInput.value || "").trim();
+        if (!chosenName) {
+            showToast("Please enter an adventurer name.");
+            playSound(sndClick);
+            return;
+        }
+        if (!player.className) {
+            showToast("Choose your path (class) to begin.");
+            playSound(sndClick);
+            return;
+        }
+        player.name = chosenName;
+        saveAll();
+        playSound(sndClick);
+        showGame();
+    });
+
+    if (player.name) {
+        showGame();
+    } else {
+        showLogin();
+    }
+});
+</script>
+</body>
+</html>
+
